@@ -80,7 +80,6 @@ import com.mapbox.navigation.voice.model.SpeechError
 import com.mapbox.navigation.voice.model.SpeechValue
 import com.mapbox.navigation.voice.model.SpeechVolume
 import com.mapboxnavigation.databinding.NavigationViewBinding
-import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
 import java.util.Locale
 import kotlinx.coroutines.*
 
@@ -407,7 +406,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
    */
   private fun preloadNextRouteBatch(nextPoints: List<Point>) {
     isPreloading = true
-    val lastLocation = mapboxNavigation.locationProvider.lastLocation
+    val lastLocation = mapboxNavigation.getNavigationLocationProvider().lastLocation
     if (lastLocation == null) {
         Log.w(TAG, "Cannot preload route: no current location yet")
         isPreloading = false
@@ -429,21 +428,24 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
       .build()
 
     ioScope.launch {
-        mapboxNavigation.requestRoutes(routeOptions, object : RoutesRequestCallback {
-            override fun onRoutesReady(routes: List<NavigationRoute>) {
-              nextRoutes = routes
-              isPreloading = false
-              Log.d(TAG, "Preloaded next batch route (${adjustedPoints.size} pts)")
-            }
+        mapboxNavigation.requestRoutes(routeOptions, object : NavigationRouterCallback {
+          override fun onCanceled(routeOptions: RouteOptions, @RouterOrigin routerOrigin: String) {
+            isPreloading = false
+          }
 
-            override fun onRoutesRequestFailure(reasons: List<String>, routeOptions: RouteOptions) {
-              isPreloading = false
-              sendErrorToReact("Error finding route $reasons")
-            }
+          override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
+            isPreloading = false
+            sendErrorToReact("Error finding route $reasons")
+          }
 
-            override fun onRoutesRequestCanceled(routeOptions: RouteOptions) {
-              isPreloading = false
-            }
+          override fun onRoutesReady(
+            routes: List<NavigationRoute>,
+            @RouterOrigin routerOrigin: String
+          ) {
+            nextRoutes = routes
+            isPreloading = false
+            Log.d(TAG, "Preloaded next batch route (${adjustedPoints.size} pts)")
+          }
         })
     }
   }
@@ -452,7 +454,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
    * Switch to nex batch function
    */
   private fun switchToNextBatch() {
-      nextRoutes?.let { routes ->
+      nextRoutes.let { routes ->
           currentBatchIndex++
           nextRoutes = null
           isPreloading = false

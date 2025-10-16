@@ -42,7 +42,7 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
   }
 
   @ReactProp(name = "waypoints")
-  override fun setWaypoints(view: MapboxNavigationView?, value: ReadableArray?) {
+  override fun setWaypoints(view: MapboxNavigationView?, value: ReadableArray) {
     val waypoints: List<Point> = value.toArrayList().mapIndexedNotNull { index, item ->
       val map = item as? Map<*, *>
       val latitude = map?.get("latitude") as? Double
@@ -81,20 +81,17 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
   }
 
   @ReactProp(name = "overlap")
-  fun setOverlap(view: MapboxNavigationView?, value: Int) {
-    overlap = value
+  override fun setOverlap(view: MapboxNavigationView?, value: Int) {
     view?.setOverlap(value)
   }
 
   @ReactProp(name = "batchSize")
-  fun setBatchSize(view: MapboxNavigationView?, value: Int) {
-    batchSize = value
+  override fun setBatchSize(view: MapboxNavigationView?, value: Int) {
     view?.setBatchSize(value)
   }
 
   @ReactProp(name = "preloadTriggerLeg")
-  fun setPreloadTriggerLeg(view: MapboxNavigationView?, value: Int) {
-    preloadTriggerLeg = value
+  override fun setPreloadTriggerLeg(view: MapboxNavigationView?, value: Int) {
     view?.setPreloadTriggerLeg(value)
   }
 
