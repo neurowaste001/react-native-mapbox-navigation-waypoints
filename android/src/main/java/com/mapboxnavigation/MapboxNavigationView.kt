@@ -80,22 +80,35 @@ import com.mapbox.navigation.voice.model.SpeechError
 import com.mapbox.navigation.voice.model.SpeechValue
 import com.mapbox.navigation.voice.model.SpeechVolume
 import com.mapboxnavigation.databinding.NavigationViewBinding
+import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
 import java.util.Locale
+import kotlinx.coroutines.*
 
 @SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout(context.baseContext) {
   private companion object {
     private const val BUTTON_ANIMATION_DURATION = 1500L
+    private const val TAG = "DynamicWaypointNavigator"
+
   }
 
-  private var origin: Point? = null
-  private var destination: Point? = null
   private var destinationTitle: String = "Destination"
   private var waypoints: List<Point> = listOf()
-  private var waypointLegs: List<WaypointLegs> = listOf()
+  private var overlap: Int = 10
+  private var batchSize: Int = 25
+  private var preloadTriggerLeg: Int = 15
   private var distanceUnit: String = DirectionsCriteria.IMPERIAL
   private var locale = Locale.getDefault()
   private var travelMode: String = DirectionsCriteria.PROFILE_DRIVING
+
+  /**
+   * Batches
+   */
+  private var routeBatches: List<List<Point>> = emptyList()
+  private var currentBatchIndex = 0
+  private var nextRoutes: List<NavigationRoute>? = null
+  private var isPreloading = false
+  private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
   /**
    * Bindings to the example layout.
@@ -321,6 +334,27 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     MapboxRouteArrowView(routeArrowOptions)
   }
 
+
+  /**
+   * Creates batches from waypointslist
+   */
+  private fun buildWaypointBatches(
+    all: List<Point>,
+    windowSize: Int,
+    overlap: Int
+  ): List<List<Point>> {
+    if (all.size <= windowSize) return listOf(all)
+    val result = mutableListOf<List<Point>>()
+    var start = 0
+    while (start < all.size) {
+      val end = (start + windowSize).coerceAtMost(all.size)
+      result.add(all.subList(start, end))
+      if (end == all.size) break
+      start += (windowSize - overlap)
+    }
+    return result
+  }
+
   /**
    * Gets notified with location updates.
    *
@@ -366,6 +400,65 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
         .getJSModule(RCTEventEmitter::class.java)
         .receiveEvent(id, "onLocationChange", event)
     }
+  }
+
+  /**
+   * Preload route for next batch
+   */
+  private fun preloadNextRouteBatch(nextPoints: List<Point>) {
+    isPreloading = true
+    val lastLocation = mapboxNavigation.locationProvider.lastLocation
+    if (lastLocation == null) {
+        Log.w(TAG, "Cannot preload route: no current location yet")
+        isPreloading = false
+        return
+    }
+
+    val currentPoint = Point.fromLngLat(lastLocation.longitude, lastLocation.latitude)
+    val adjustedPoints = mutableListOf(currentPoint).apply { addAll(nextPoints.drop(1)) }
+
+    val routeOptions = RouteOptions.builder()
+      .applyDefaultNavigationOptions()
+      .applyLanguageAndVoiceUnitOptions(context)
+      .coordinatesList(adjustedPoints)
+      .language(locale.language)
+      .steps(true)
+      .voiceInstructions(true)
+      .voiceUnits(distanceUnit)
+      .profile(travelMode)
+      .build()
+
+    ioScope.launch {
+        mapboxNavigation.requestRoutes(routeOptions, object : RoutesRequestCallback {
+            override fun onRoutesReady(routes: List<NavigationRoute>) {
+              nextRoutes = routes
+              isPreloading = false
+              Log.d(TAG, "Preloaded next batch route (${adjustedPoints.size} pts)")
+            }
+
+            override fun onRoutesRequestFailure(reasons: List<String>, routeOptions: RouteOptions) {
+              isPreloading = false
+              sendErrorToReact("Error finding route $reasons")
+            }
+
+            override fun onRoutesRequestCanceled(routeOptions: RouteOptions) {
+              isPreloading = false
+            }
+        })
+    }
+  }
+
+  /**
+   * Switch to nex batch function
+   */
+  private fun switchToNextBatch() {
+      nextRoutes?.let { routes ->
+          currentBatchIndex++
+          nextRoutes = null
+          isPreloading = false
+          mapboxNavigation.setNavigationRoutes(routes)
+          Log.d(TAG, "Switched to batch $currentBatchIndex")
+      }
   }
 
   /**
@@ -430,6 +523,27 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     context
       .getJSModule(RCTEventEmitter::class.java)
       .receiveEvent(id, "onRouteProgressChange", event)
+
+    // Prefetchlegs or switch batch
+    val legIndex = routeProgress.currentLegProgress?.legIndex ?: 0
+
+    // Preload next batch when reaching the trigger leg
+    if (legIndex >= preloadTriggerLeg &&
+        !isPreloading &&
+        currentBatchIndex + 1 < routeBatches.size
+    ) {
+        val nextPoints = routeBatches[currentBatchIndex + 1]
+        preloadNextRouteBatch(nextPoints)
+    }
+
+    // Switch when reaching the last leg of current batch
+    if (legIndex >= (batchSize - 2) &&
+        nextRoutes != null &&
+        currentBatchIndex + 1 < routeBatches.size
+    ) {
+        switchToNextBatch()
+    }
+      
   }
 
   /**
@@ -491,15 +605,11 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
 
   @SuppressLint("MissingPermission")
   private fun initNavigation() {
-    if (origin == null || destination == null) {
-      sendErrorToReact("origin and destination are required")
-      return
-    }
 
     // Recenter Camera
     val initialCameraOptions = CameraOptions.Builder()
       .zoom(14.0)
-      .center(origin)
+      .center(waypoints.firstOrNull())
       .build()
     binding.mapView.mapboxMap.setCamera(initialCameraOptions)
 
@@ -635,6 +745,19 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     startRoute()
   }
 
+  private fun onArrival(routeProgress: RouteProgress) {
+    val leg = routeProgress.currentLegProgress
+    if (leg != null) {
+      val event = Arguments.createMap()
+      event.putInt("index", leg.legIndex)
+      event.putDouble("latitude", leg.legDestination?.location?.latitude() ?: 0.0)
+      event.putDouble("longitude", leg.legDestination?.location?.longitude() ?: 0.0)
+      context
+        .getJSModule(RCTEventEmitter::class.java)
+        .receiveEvent(id, "onArrive", event)
+    }
+  }
+
   private val arrivalObserver = object : ArrivalObserver {
 
     override fun onWaypointArrival(routeProgress: RouteProgress) {
@@ -650,18 +773,6 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     }
   }
 
-  private fun onArrival(routeProgress: RouteProgress) {
-    val leg = routeProgress.currentLegProgress
-    if (leg != null) {
-      val event = Arguments.createMap()
-      event.putInt("index", leg.legIndex)
-      event.putDouble("latitude", leg.legDestination?.location?.latitude() ?: 0.0)
-      event.putDouble("longitude", leg.legDestination?.location?.longitude() ?: 0.0)
-      context
-        .getJSModule(RCTEventEmitter::class.java)
-        .receiveEvent(id, "onArrive", event)
-    }
-  }
 
   override fun requestLayout() {
     super.requestLayout()
@@ -676,24 +787,13 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     layout(left, top, right, bottom)
   }
 
-  private fun findRoute(coordinates: List<Point>) {
-    // Separate legs work
-    val indices = mutableListOf<Int>()
-    val names = mutableListOf<String>()
-    indices.add(0)
-    names.add("origin")
-    indices.addAll(waypointLegs.map { it.index })
-    names.addAll(waypointLegs.map { it.name })
-    indices.add(coordinates.count() - 1)
-    names.add(destinationTitle)
+  private fun startNavigationWithBatch(points: List<Point>) {
 
-    mapboxNavigation?.requestRoutes(
+   mapboxNavigation?.requestRoutes(
       RouteOptions.builder()
         .applyDefaultNavigationOptions()
         .applyLanguageAndVoiceUnitOptions(context)
-        .coordinatesList(coordinates)
-        .waypointIndicesList(indices)
-        .waypointNamesList(names)
+        .coordinatesList(points)
         .language(locale.language)
         .steps(true)
         .voiceInstructions(true)
@@ -731,7 +831,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     binding.tripProgressCard.visibility = View.VISIBLE
 
     // move the camera to overview when new route is available
-//    navigationCamera.requestNavigationCameraToOverview()
+    // navigationCamera.requestNavigationCameraToOverview()
     mapboxNavigation?.startTripSession(withForegroundService = true)
   }
 
@@ -743,13 +843,16 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     mapboxNavigation?.registerLocationObserver(locationObserver)
     mapboxNavigation?.registerVoiceInstructionsObserver(voiceInstructionsObserver)
 
-    // Create a list of coordinates that includes origin, destination
+    // Create a list of coordinates that includes waypoints
     val coordinatesList = mutableListOf<Point>()
-    this.origin?.let { coordinatesList.add(it) }
     this.waypoints.let { coordinatesList.addAll(waypoints) }
-    this.destination?.let { coordinatesList.add(it) }
 
-    findRoute(coordinatesList)
+    routeBatches = buildWaypointBatches(coordinatesList, batchSize, overlap)
+    
+    if (routeBatches.isNotEmpty()) {
+        Log.d(TAG, "Starting with ${routeBatches.size} batches")
+        startNavigationWithBatch(routeBatches.first())
+    }
   }
 
   override fun onDetachedFromWindow() {
@@ -782,24 +885,20 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     this.onDestroy()
   }
 
-  fun setStartOrigin(origin: Point?) {
-    this.origin = origin
-  }
-
-  fun setDestination(destination: Point?) {
-    this.destination = destination
-  }
-
-  fun setDestinationTitle(title: String) {
-    this.destinationTitle = title
-  }
-
-  fun setWaypointLegs(legs: List<WaypointLegs>) {
-    this.waypointLegs = legs
-  }
-
   fun setWaypoints(waypoints: List<Point>) {
     this.waypoints = waypoints
+  }
+
+  fun setOverlap(overlap: Int) {
+    this.overlap = overlap
+  }
+
+  fun setBatchSize(batchSize: Int) {
+    this.batchSize = batchSize
+  }
+
+  fun setPreloadTriggerLeg(preloadTriggerLeg: Int) {
+    this.preloadTriggerLeg = preloadTriggerLeg
   }
 
   fun setDirectionUnit(unit: String) {

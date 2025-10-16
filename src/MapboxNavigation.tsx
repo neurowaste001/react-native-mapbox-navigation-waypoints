@@ -97,8 +97,6 @@ class MapboxNavigation extends React.Component<
       );
     }
     const {
-      startOrigin,
-      destination,
       style,
       distanceUnit = 'imperial',
       onArrive,
@@ -107,6 +105,9 @@ class MapboxNavigation extends React.Component<
       onCancelNavigation,
       onError,
       travelMode,
+      overlap = 10,
+      batchSize = 25,
+      preloadTriggerLeg = 15,
       ...rest
     } = this.props;
 
@@ -115,9 +116,6 @@ class MapboxNavigation extends React.Component<
         <MapboxNavigationView
           style={styles.mapbox}
           distanceUnit={distanceUnit}
-          startOrigin={[startOrigin.longitude, startOrigin.latitude]}
-          destinationTitle={destination.title}
-          destination={[destination.longitude, destination.latitude]}
           onLocationChange={(event) => onLocationChange?.(event.nativeEvent)}
           onRouteProgressChange={(event) =>
             onRouteProgressChange?.(event.nativeEvent)
@@ -128,6 +126,9 @@ class MapboxNavigation extends React.Component<
             onCancelNavigation?.(event.nativeEvent)
           }
           travelMode={travelMode}
+          overlap={overlap}
+          preloadTriggerLeg={preloadTriggerLeg}
+          batchSize={batchSize}
           {...rest}
         />
       </View>

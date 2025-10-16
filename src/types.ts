@@ -9,11 +9,6 @@ export type Coordinate = {
 
 export type Waypoint = Coordinate & {
   name?: string;
-  /**
-   * Indicates whether the `onArrive` event is triggered when reaching the waypoint effectively.
-   * @Default true
-   */
-  separatesLegs?: boolean;
 };
 
 export type WaypointEvent = Coordinate & {
@@ -63,12 +58,12 @@ export interface MapboxNavigationProps {
   style?: StyleProp<ViewStyle>;
   mute?: boolean;
   showCancelButton?: boolean;
-  startOrigin: Coordinate;
-  waypoints?: Waypoint[];
-  separateLegs?: boolean;
-  destination: Coordinate & { title?: string };
+  waypoints: Waypoint[];
   language?: Language;
   distanceUnit?: 'metric' | 'imperial';
+  overlap?: number;
+  batchSize?: number;
+  preloadTriggerLeg?: number;
 
   /**
    * Specifies the mode of travel for navigation.

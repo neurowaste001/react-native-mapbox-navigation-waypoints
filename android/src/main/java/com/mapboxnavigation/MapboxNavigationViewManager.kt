@@ -34,31 +34,6 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     )
   }
 
-  @ReactProp(name = "startOrigin")
-  override fun setStartOrigin(view: MapboxNavigationView?, value: ReadableArray?) {
-    if (value == null) {
-      view?.setStartOrigin(null)
-      return
-    }
-    view?.setStartOrigin(Point.fromLngLat(value.getDouble(0), value.getDouble(1)))
-  }
-
-  @ReactProp(name = "destination")
-  override fun setDestination(view: MapboxNavigationView?, value: ReadableArray?) {
-    if (value == null) {
-      view?.setDestination(null)
-      return
-    }
-    view?.setDestination(Point.fromLngLat(value.getDouble(0), value.getDouble(1)))
-  }
-
-  @ReactProp(name = "destinationTitle")
-  override fun setDestinationTitle(view: MapboxNavigationView?, value: String?) {
-    if (value != null) {
-      view?.setDestinationTitle(value)
-    }
-  }
-
   @ReactProp(name = "distanceUnit")
   override fun setDirectionUnit(view: MapboxNavigationView?, value: String?) {
     if (value != null)  {
@@ -68,27 +43,16 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
 
   @ReactProp(name = "waypoints")
   override fun setWaypoints(view: MapboxNavigationView?, value: ReadableArray?) {
-    if (value == null) {
-      view?.setWaypoints(listOf())
-      return
-    }
-    val legs = mutableListOf<WaypointLegs>()
     val waypoints: List<Point> = value.toArrayList().mapIndexedNotNull { index, item ->
       val map = item as? Map<*, *>
       val latitude = map?.get("latitude") as? Double
       val longitude = map?.get("longitude") as? Double
-      val name = map?.get("name") as? String
-      val separatesLegs = map?.get("separatesLegs") as? Boolean
-      if (separatesLegs != false) {
-        legs.add(WaypointLegs(index = index + 1, name = name ?: "waypoint-$index"))
-      }
       if (latitude != null && longitude != null) {
         Point.fromLngLat(longitude, latitude)
       } else {
         null
       }
     }
-    view?.setWaypointLegs(legs)
     view?.setWaypoints(waypoints)
   }
 
@@ -114,6 +78,24 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     if (value != null)  {
       view?.setTravelMode(value)
     }
+  }
+
+  @ReactProp(name = "overlap")
+  fun setOverlap(view: MapboxNavigationView?, value: Int) {
+    overlap = value
+    view?.setOverlap(value)
+  }
+
+  @ReactProp(name = "batchSize")
+  fun setBatchSize(view: MapboxNavigationView?, value: Int) {
+    batchSize = value
+    view?.setBatchSize(value)
+  }
+
+  @ReactProp(name = "preloadTriggerLeg")
+  fun setPreloadTriggerLeg(view: MapboxNavigationView?, value: Int) {
+    preloadTriggerLeg = value
+    view?.setPreloadTriggerLeg(value)
   }
 
   companion object {

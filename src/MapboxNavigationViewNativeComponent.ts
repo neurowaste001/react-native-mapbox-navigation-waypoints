@@ -5,26 +5,23 @@ import type { NativeEventsProps } from './types';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 import { requireNativeComponent } from 'react-native';
 
-type NativeCoordinate = number[];
 interface NativeProps extends ViewProps {
   mute?: boolean;
-  separateLegs?: boolean;
   distanceUnit?: string;
-  startOrigin: NativeCoordinate;
-  waypoints?: {
+  waypoints: {
     latitude: Double;
     longitude: Double;
     name?: string;
-    separatesLegs?: boolean;
   }[];
-  destinationTitle?: string;
-  destination: NativeCoordinate;
   language?: string;
   showCancelButton?: boolean;
   shouldSimulateRoute?: boolean;
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
   travelMode?: string;
+  overlap?: number;
+  batchSize?: number;
+  preloadTriggerLeg?: number;
 }
 
 let component;
