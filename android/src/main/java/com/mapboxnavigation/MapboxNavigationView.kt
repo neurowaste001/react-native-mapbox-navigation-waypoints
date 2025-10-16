@@ -406,14 +406,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
    */
   private fun preloadNextRouteBatch(nextPoints: List<Point>) {
     isPreloading = true
-    val lastLocation = mapboxNavigation.getNavigationLocationProvider().lastLocation
-    if (lastLocation == null) {
-        Log.w(TAG, "Cannot preload route: no current location yet")
-        isPreloading = false
-        return
-    }
 
-    val currentPoint = Point.fromLngLat(lastLocation.longitude, lastLocation.latitude)
     val adjustedPoints = mutableListOf(currentPoint).apply { addAll(nextPoints.drop(1)) }
 
     val routeOptions = RouteOptions.builder()
@@ -428,7 +421,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
       .build()
 
     ioScope.launch {
-        mapboxNavigation.requestRoutes(routeOptions, object : NavigationRouterCallback {
+        mapboxNavigation?.requestRoutes(routeOptions, object : NavigationRouterCallback {
           override fun onCanceled(routeOptions: RouteOptions, @RouterOrigin routerOrigin: String) {
             isPreloading = false
           }
@@ -454,11 +447,11 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
    * Switch to nex batch function
    */
   private fun switchToNextBatch() {
-      nextRoutes.let { routes ->
+      nextRoutes?.let { routes ->
           currentBatchIndex++
           nextRoutes = null
           isPreloading = false
-          mapboxNavigation.setNavigationRoutes(routes)
+          mapboxNavigation?.setNavigationRoutes(routes)
           Log.d(TAG, "Switched to batch $currentBatchIndex")
       }
   }
