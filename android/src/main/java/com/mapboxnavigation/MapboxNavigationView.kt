@@ -530,7 +530,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     }
 
     // Switch when reaching the last leg of current batch
-    if (legIndex >= (batchSize - 2) &&
+    if (legIndex >= (batchSize - overlap) &&
         nextRoutes != null &&
         currentBatchIndex + 1 < routeBatches.size
     ) {
