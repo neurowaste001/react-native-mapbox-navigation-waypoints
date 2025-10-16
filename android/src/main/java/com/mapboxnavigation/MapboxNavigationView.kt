@@ -407,12 +407,10 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   private fun preloadNextRouteBatch(nextPoints: List<Point>) {
     isPreloading = true
 
-    val adjustedPoints = mutableListOf(currentPoint).apply { addAll(nextPoints.drop(1)) }
-
     val routeOptions = RouteOptions.builder()
       .applyDefaultNavigationOptions()
       .applyLanguageAndVoiceUnitOptions(context)
-      .coordinatesList(adjustedPoints)
+      .coordinatesList(nextPoints)
       .language(locale.language)
       .steps(true)
       .voiceInstructions(true)
@@ -437,7 +435,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
           ) {
             nextRoutes = routes
             isPreloading = false
-            Log.d(TAG, "Preloaded next batch route (${adjustedPoints.size} pts)")
+            Log.d(TAG, "Preloaded next batch route (${nextPoints.size} pts)")
           }
         })
     }

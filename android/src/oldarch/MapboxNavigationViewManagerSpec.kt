@@ -13,5 +13,5 @@ abstract class MapboxNavigationViewManagerSpec<T : View> : SimpleViewManager<T>(
   abstract fun setTravelMode(view: T?, value: String?)
   abstract fun setOverlap(view: T?, value: Int)
   abstract fun setBatchSize(view: T?, value: Int)
-  abstract fun setPreloadTriggerLegOverlap(view: T?, value: Int)
+  abstract fun setPreloadTriggerLeg(view: T?, value: Int)
 }
