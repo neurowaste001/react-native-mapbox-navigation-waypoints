@@ -1,16 +1,16 @@
 package com.mapboxnavigation
 
-import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.common.MapBuilder
+import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.mapbox.api.directions.v5.models.DirectionsWaypoint
 import com.mapbox.geojson.Point
 
 @ReactModule(name = MapboxNavigationViewManager.NAME)
-class MapboxNavigationViewManager(private var reactContext: ReactApplicationContext): MapboxNavigationViewManagerSpec<MapboxNavigationView>() {
+class MapboxNavigationViewManager(private var reactContext: ReactApplicationContext) :
+        MapboxNavigationViewManagerSpec<MapboxNavigationView>() {
   override fun getName(): String {
     return NAME
   }
@@ -24,13 +24,19 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     super.onDropViewInstance(view)
   }
 
-  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Map<String, String>> {
+  override fun getExportedCustomDirectEventTypeConstants():
+          MutableMap<String, Map<String, String>> {
     return MapBuilder.of(
-      "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
-      "onError", MapBuilder.of("registrationName", "onError"),
-      "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
-      "onArrive", MapBuilder.of("registrationName", "onArrive"),
-      "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
+            "onLocationChange",
+            MapBuilder.of("registrationName", "onLocationChange"),
+            "onError",
+            MapBuilder.of("registrationName", "onError"),
+            "onCancelNavigation",
+            MapBuilder.of("registrationName", "onCancelNavigation"),
+            "onArrive",
+            MapBuilder.of("registrationName", "onArrive"),
+            "onRouteProgressChange",
+            MapBuilder.of("registrationName", "onRouteProgressChange"),
     )
   }
 
@@ -61,7 +67,7 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
 
   @ReactProp(name = "distanceUnit")
   override fun setDirectionUnit(view: MapboxNavigationView?, value: String?) {
-    if (value != null)  {
+    if (value != null) {
       view?.setDirectionUnit(value)
     }
   }
@@ -73,21 +79,22 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
       return
     }
     val legs = mutableListOf<WaypointLegs>()
-    val waypoints: List<Point> = value.toArrayList().mapIndexedNotNull { index, item ->
-      val map = item as? Map<*, *>
-      val latitude = map?.get("latitude") as? Double
-      val longitude = map?.get("longitude") as? Double
-      val name = map?.get("name") as? String
-      val separatesLegs = map?.get("separatesLegs") as? Boolean
-      if (separatesLegs != false) {
-        legs.add(WaypointLegs(index = index + 1, name = name ?: "waypoint-$index"))
-      }
-      if (latitude != null && longitude != null) {
-        Point.fromLngLat(longitude, latitude)
-      } else {
-        null
-      }
-    }
+    val waypoints: List<Point> =
+            value.toArrayList().mapIndexedNotNull { index, item ->
+              val map = item as? Map<*, *>
+              val latitude = map?.get("latitude") as? Double
+              val longitude = map?.get("longitude") as? Double
+              val name = map?.get("name") as? String
+              val separatesLegs = map?.get("separatesLegs") as? Boolean
+              if (separatesLegs != false) {
+                legs.add(WaypointLegs(index = index + 1, name = name ?: "waypoint-$index"))
+              }
+              if (latitude != null && longitude != null) {
+                Point.fromLngLat(longitude, latitude)
+              } else {
+                null
+              }
+            }
     view?.setWaypointLegs(legs)
     view?.setWaypoints(waypoints)
   }
@@ -111,33 +118,24 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
 
   @ReactProp(name = "travelMode")
   override fun setTravelMode(view: MapboxNavigationView?, value: String?) {
-    if (value != null)  {
+    if (value != null) {
       view?.setTravelMode(value)
     }
   }
 
   @ReactProp(name = "maxWidth")
-  override fun setMaxWidth(view: MapboxNavigationView?, value: Double?) {
-    if (value !== null) {
-      view?.setMaxWidth(value)
-      return
-    }
+  override fun setMaxWidth(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxWidth(value)
   }
 
   @ReactProp(name = "maxHeight")
-  override fun setMaxHeight(view: MapboxNavigationView?, value: Double?) {
-    if (value !== null) {
-      view?.setMaxHeight(value)
-      return
-    }
+  override fun setMaxHeight(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxHeight(value)
   }
 
   @ReactProp(name = "maxWeight")
-  override fun setMaxWeight(view: MapboxNavigationView?, value: Double?) {
-    if (value !== null) {
-      view?.setMaxWeight(value)
-      return
-    }
+  override fun setMaxWeight(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxWeight(value)
   }
   companion object {
     const val NAME = "MapboxNavigationView"

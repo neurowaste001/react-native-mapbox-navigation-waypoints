@@ -808,15 +808,15 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     this.waypoints = waypoints
   }
 
-  fun setMaxWidth(maxWidth: Double?) {
+  fun setMaxWidth(maxWidth: Double) {
     this.maxWidth = maxWidth
   }
 
-  fun setMaxHeight(maxHeight: Double?) {
+  fun setMaxHeight(maxHeight: Double) {
     this.maxHeight = maxHeight
   }
     
-  fun setMaxWeight(maxWeight: Double?) {
+  fun setMaxWeight(maxWeight: Double) {
     this.maxWeight = maxWeight
   }
 
