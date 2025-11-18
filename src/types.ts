@@ -81,6 +81,9 @@ export interface MapboxNavigationProps {
    * @Default "driving-traffic"
    */
   travelMode?: 'driving' | 'driving-traffic' | 'walking' | 'cycling';
+  width?: number;
+  height?: number;
+  weight?: number;
 
   /**
    * [iOS only]

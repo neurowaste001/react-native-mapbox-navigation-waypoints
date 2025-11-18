@@ -96,6 +96,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   private var distanceUnit: String = DirectionsCriteria.IMPERIAL
   private var locale = Locale.getDefault()
   private var travelMode: String = DirectionsCriteria.PROFILE_DRIVING
+  private var width: Double? = null
+  private var height: Double? = null
+  private var weight: Double? = null
 
   /**
    * Bindings to the example layout.
@@ -699,6 +702,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
         .voiceInstructions(true)
         .voiceUnits(distanceUnit)
         .profile(travelMode)
+        .maxWidth(width)
+        .maxHeight(height)
+        .maxWeight(weight)
         .build(),
       object : NavigationRouterCallback {
         override fun onCanceled(routeOptions: RouteOptions, @RouterOrigin routerOrigin: String) {
@@ -800,6 +806,18 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
 
   fun setWaypoints(waypoints: List<Point>) {
     this.waypoints = waypoints
+  }
+
+  fun setWidth(width: Double?) {
+    this.width = width
+  }
+
+  fun setHeight(height: Double?) {
+    this.height = height
+  }
+    
+  fun setWeight(weight: Double?) {
+    this.weight = weight
   }
 
   fun setDirectionUnit(unit: String) {

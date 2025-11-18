@@ -116,6 +116,29 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     }
   }
 
+  @ReactProp(name = "width")
+  override fun setWidth(view: MapboxNavigationView?, value: Double?) {
+    if (value !== null) {
+      view?.setWidth(value)
+      return
+    }
+  }
+
+  @ReactProp(name = "height")
+  override fun setHeight(view: MapboxNavigationView?, value: Double?) {
+    if (value !== null) {
+      view?.setHeight(value)
+      return
+    }
+  }
+
+  @ReactProp(name = "weight")
+  override fun setWeight(view: MapboxNavigationView?, value: Double?) {
+    if (value !== null) {
+      view?.setWeight(value)
+      return
+    }
+  }
   companion object {
     const val NAME = "MapboxNavigationView"
   }
