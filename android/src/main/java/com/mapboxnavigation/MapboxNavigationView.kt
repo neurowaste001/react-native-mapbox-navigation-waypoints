@@ -96,9 +96,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   private var distanceUnit: String = DirectionsCriteria.IMPERIAL
   private var locale = Locale.getDefault()
   private var travelMode: String = DirectionsCriteria.PROFILE_DRIVING
-  private var maxWidth: Double? = null
-  private var maxHeight: Double? = null
-  private var maxWeight: Double? = null
+  private var maxVehicleWidth: Double? = null
+  private var maxVehicleHeight: Double? = null
+  private var maxVehicleWeight: Double? = null
 
   /**
    * Bindings to the example layout.
@@ -702,9 +702,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
         .voiceInstructions(true)
         .voiceUnits(distanceUnit)
         .profile(travelMode)
-        .maxWidth(maxWidth)
-        .maxHeight(maxHeight)
-        .maxWeight(maxWeight)
+        .maxWidth(maxVehicleWidth)
+        .maxHeight(maxVehicleHeight)
+        .maxWeight(maxVehicleWeight)
         .build(),
       object : NavigationRouterCallback {
         override fun onCanceled(routeOptions: RouteOptions, @RouterOrigin routerOrigin: String) {
@@ -808,16 +808,16 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     this.waypoints = waypoints
   }
 
-  fun setMaxWidth(maxWidth: Double) {
-    this.maxWidth = maxWidth
+  fun setMaxVehicleWidth(maxVehicleWidth: Double) {
+    this.maxVehicleWidth = maxVehicleWidth
   }
 
-  fun setMaxHeight(maxHeight: Double) {
-    this.maxHeight = maxHeight
+  fun setMaxVehicleHeight(maxVehicleHeight: Double) {
+    this.maxVehicleHeight = maxVehicleHeight
   }
     
-  fun setMaxWeight(maxWeight: Double) {
-    this.maxWeight = maxWeight
+  fun setMaxVehicleWeight(maxVehicleWeight: Double) {
+    this.maxVehicleWeight = maxVehicleWeight
   }
 
   fun setDirectionUnit(unit: String) {

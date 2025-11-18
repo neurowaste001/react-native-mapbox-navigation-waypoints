@@ -25,9 +25,9 @@ interface NativeProps extends ViewProps {
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
   travelMode?: string;
-  maxWidth?: number;
-  maxHeight?: number;
-  maxWeight?: number;
+  maxVehicleWidth?: number;
+  maxVehicleHeight?: number;
+  maxVehicleWeight?: number;
 }
 
 let component;

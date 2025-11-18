@@ -124,18 +124,18 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
   }
 
   @ReactProp(name = "maxWidth")
-  override fun setMaxWidth(view: MapboxNavigationView?, value: Double) {
-    view?.setMaxWidth(value)
+  override fun setMaxVehicleWidth(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxVehicleWidth(value)
   }
 
   @ReactProp(name = "maxHeight")
-  override fun setMaxHeight(view: MapboxNavigationView?, value: Double) {
-    view?.setMaxHeight(value)
+  override fun setMaxVehicleHeight(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxVehicleHeight(value)
   }
 
   @ReactProp(name = "maxWeight")
-  override fun setMaxWeight(view: MapboxNavigationView?, value: Double) {
-    view?.setMaxWeight(value)
+  override fun setMaxVehicleWeight(view: MapboxNavigationView?, value: Double) {
+    view?.setMaxVehicleWeight(value)
   }
   companion object {
     const val NAME = "MapboxNavigationView"
