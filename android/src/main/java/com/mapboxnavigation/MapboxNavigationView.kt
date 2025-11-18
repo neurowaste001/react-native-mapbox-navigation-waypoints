@@ -96,9 +96,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   private var distanceUnit: String = DirectionsCriteria.IMPERIAL
   private var locale = Locale.getDefault()
   private var travelMode: String = DirectionsCriteria.PROFILE_DRIVING
-  private var maxWidth: Double? = null
-  private var maxHeight: Double? = null
-  private var maxWeight: Double? = null
+  private var maxWidth: Float? = null
+  private var maxHeight: Float? = null
+  private var maxWeight: Float? = null
 
   /**
    * Bindings to the example layout.
@@ -808,15 +808,15 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     this.waypoints = waypoints
   }
 
-  fun setMaxWidth(maxWidth: Double?) {
+  fun setMaxWidth(maxWidth: Float?) {
     this.maxWidth = maxWidth
   }
 
-  fun setMaxHeight(maxHeight: Double?) {
+  fun setMaxHeight(maxHeight: Float?) {
     this.maxHeight = maxHeight
   }
     
-  fun setMaxWeight(maxWeight: Double?) {
+  fun setMaxWeight(maxWeight: Float?) {
     this.maxWeight = maxWeight
   }
 
