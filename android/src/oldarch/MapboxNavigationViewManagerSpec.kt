@@ -14,7 +14,8 @@ abstract class MapboxNavigationViewManagerSpec<T : View> : SimpleViewManager<T>(
   abstract fun setLocal(view: T?, language: String?)
   abstract fun setMute(view: T?, value: Boolean)
   abstract fun setShowCancelButton(view: T?, value: Boolean)
-  abstract fun setWidth(view: T?, value: Double?)
-  abstract fun setHeight(view: T?, value: Double?)
-  abstract fun setWeight(view: T?, value: Double?)
+  abstract fun setTravelMode(view: T?, value: String?)
+  abstract fun setMaxWidth(view: T?, value: Double?)
+  abstract fun setMaxHeight(view: T?, value: Double?)
+  abstract fun setMaxWeight(view: T?, value: Double?)
 }

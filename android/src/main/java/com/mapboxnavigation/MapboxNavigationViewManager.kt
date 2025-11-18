@@ -116,26 +116,26 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     }
   }
 
-  @ReactProp(name = "width")
-  override fun setWidth(view: MapboxNavigationView?, value: Double?) {
+  @ReactProp(name = "maxWidth")
+  override fun setMaxWidth(view: MapboxNavigationView?, value: Double?) {
     if (value !== null) {
-      view?.setWidth(value)
+      view?.setMaxWidth(value)
       return
     }
   }
 
-  @ReactProp(name = "height")
-  override fun setHeight(view: MapboxNavigationView?, value: Double?) {
+  @ReactProp(name = "maxHeight")
+  override fun setMaxHeight(view: MapboxNavigationView?, value: Double?) {
     if (value !== null) {
-      view?.setHeight(value)
+      view?.setMaxHeight(value)
       return
     }
   }
 
-  @ReactProp(name = "weight")
-  override fun setWeight(view: MapboxNavigationView?, value: Double?) {
+  @ReactProp(name = "maxWeight")
+  override fun setMaxWeight(view: MapboxNavigationView?, value: Double?) {
     if (value !== null) {
-      view?.setWeight(value)
+      view?.setMaxWeight(value)
       return
     }
   }
